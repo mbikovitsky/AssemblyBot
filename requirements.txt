@@ -1,3 +1,2 @@
-tornado==4.3
-Flask==0.10.1
+aiohttp==0.21.5
 telepot==6.7
