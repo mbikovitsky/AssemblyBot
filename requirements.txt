@@ -1,2 +1,1 @@
-aiohttp==0.21.5
-telepot==6.7
+telepot==8.1
