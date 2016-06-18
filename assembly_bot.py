@@ -19,10 +19,42 @@ class BotException(Exception):
 class AssemblyBot(telepot.async.Bot):
     UNRECOGNIZED_CONTENT_TYPES = ("voice", "sticker", "photo", "audio",
                                   "document", "video", "contact", "location")
+
+    COMMAND_REGEX = re.compile(r"^\s*/(?P<command>help).*$",
+                               re.DOTALL | re.IGNORECASE)
+
     MESSAGE_REGEX = re.compile(r"^(?:\s*\(\s*(?P<arch>x86|x64)\s*\)\s*)?"
                                r"(?:(?P<bytes>(?:[0-9a-f]{2})+)|"
                                r"(?P<assembly>\S.*))$",
                                re.DOTALL | re.IGNORECASE)
+
+    USAGE_TEXT = """I can assemble and disassemble various instructions.
+
+To assemble, send me a message in the following format:
+<pre>  (arch) instruction1; instruction2</pre>
+You can also separate instructions with newlines.
+For example:
+<pre>  (x86) xor eax, eax</pre>
+Or:
+<pre>  (x64)
+  begin:
+    call get_eip
+  get_eip:
+    pop eax
+    sub eax, get_eip - begin
+    ret</pre>
+
+To disassemble, send me a message in the following format:
+<pre>  (arch) hex text</pre>
+For example:
+<pre>  (x64) c3</pre>
+
+Currently, the supported architectures are:
+- x86
+- x64
+
+If the architecture is omitted, x86 is assumed.
+"""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -35,7 +67,12 @@ class AssemblyBot(telepot.async.Bot):
             if content_type in self.UNRECOGNIZED_CONTENT_TYPES:
                 raise BotException("Message content not understood.")
 
-            result = self._process_message_text(message["text"])
+            message_text = message["text"]
+
+            if self._is_command(message_text):
+                result = self._process_command_text(message["text"])
+            else:
+                result = self._process_query_text(message["text"])
             await self._send_reply(message, result)
         except Exception as e:
             try:
@@ -81,6 +118,20 @@ class AssemblyBot(telepot.async.Bot):
     def _generate_random_id():
         # Return a random ID of at most 64 chars in length
         return hex(random.randint(0, 2 ** (32 * 8) - 1))[2:]
+
+    def _is_command(self, text):
+        return bool(self.COMMAND_REGEX.fullmatch(text))
+
+    def _process_command_text(self, text):
+        match = self.COMMAND_REGEX.fullmatch(text)
+        if not match:
+            raise BotException("Unrecognized command.")
+
+        command = match.group("command").lower()
+        if command == "help":
+            return self.USAGE_TEXT
+        else:
+            raise BotException("Unrecognized command.")
 
     def _process_query_text(self, text):
         match = self.MESSAGE_REGEX.fullmatch(text)
