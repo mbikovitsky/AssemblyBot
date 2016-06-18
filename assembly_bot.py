@@ -8,6 +8,7 @@ import binascii
 import random
 import cgi
 from capstone import *
+from keystone import *
 
 
 class BotException(Exception):
@@ -84,7 +85,8 @@ class AssemblyBot(telepot.async.Bot):
             result = self._process_bytes(match.group("arch"),
                                          match.group("bytes"))
         elif match.group("assembly"):
-            raise BotException("Not implemented.")
+            result = self._process_assembly(match.group("arch"),
+                                            match.group("assembly"))
         else:
             raise BotException("Not supported.")
 
@@ -104,3 +106,15 @@ class AssemblyBot(telepot.async.Bot):
         return "\n".join("0x%x:\t%s\t%s" % (address, mnemonic, op_str)
                          for address, size, mnemonic, op_str
                          in disassembler.disasm_lite(binary, 0))
+
+    def _process_assembly(self, architecture, text):
+        architecture = architecture.lower() if architecture else "x86"
+        if architecture == "x86":
+            assembler = Ks(KS_ARCH_X86, KS_MODE_32)
+        elif architecture == "x64":
+            assembler = Ks(KS_ARCH_X86, KS_MODE_64)
+        else:
+            raise BotException("Unsupported architecture.")
+
+        assembler_output = bytes(assembler.asm(text.encode("UTF-8"))[0])
+        return binascii.hexlify(assembler_output).decode("UTF-8")
