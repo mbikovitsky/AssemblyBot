@@ -36,11 +36,8 @@ class AssemblyBot(telepot.async.Bot):
 
             result = self._process_message_text(message["text"])
             await self._send_reply(message, result)
-        except BotException as e:
+        except Exception as e:
             await self._send_reply(message, "ERROR: " + str(e))
-        except:
-            await self._send_reply(message, "ERROR: Exception occurred "
-                                            "while processing request.")
 
     async def on_inline_query(self, message):
         query_id, from_id, query_string = telepot.glance(message,
