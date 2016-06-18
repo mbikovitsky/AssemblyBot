@@ -6,6 +6,7 @@ import telepot.async
 import re
 import binascii
 import random
+import cgi
 from capstone import *
 
 
@@ -70,7 +71,7 @@ class AssemblyBot(telepot.async.Bot):
 
     @staticmethod
     def _format_as_html(text):
-        return "<pre>{}</pre>".format(text)
+        return "<pre>{}</pre>".format(cgi.escape(text))
 
     @staticmethod
     def _generate_random_id():
