@@ -45,7 +45,7 @@ class AssemblyBot(telepot.async.Bot):
                                                          flavor="inline_query")
 
         def _compute_answer():
-            result = self._process_message_text(query_string)
+            result = self._process_query_text(query_string)
 
             return [
                 {
@@ -63,9 +63,8 @@ class AssemblyBot(telepot.async.Bot):
 
     async def _send_reply(self, message, reply):
         await self.sendMessage(message["chat"]["id"],
-                               self._format_as_html(reply),
-                               parse_mode="HTML",
-                               reply_to_message_id=message["message_id"])
+                               reply,
+                               parse_mode="HTML")
 
     @staticmethod
     def _format_as_html(text):
@@ -76,7 +75,7 @@ class AssemblyBot(telepot.async.Bot):
         # Return a random ID of at most 64 chars in length
         return hex(random.randint(0, 2 ** (32 * 8) - 1))[2:]
 
-    def _process_message_text(self, text):
+    def _process_query_text(self, text):
         match = self.MESSAGE_REGEX.fullmatch(text)
         if not match:
             raise BotException("Syntax error.")
@@ -90,7 +89,7 @@ class AssemblyBot(telepot.async.Bot):
         else:
             raise BotException("Not supported.")
 
-        return result
+        return self._format_as_html(result)
 
     def _process_bytes(self, architecture, raw_bytes):
         architecture = architecture.lower() if architecture else "x86"
