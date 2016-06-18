@@ -38,7 +38,14 @@ class AssemblyBot(telepot.async.Bot):
             result = self._process_message_text(message["text"])
             await self._send_reply(message, result)
         except Exception as e:
-            await self._send_reply(message, "ERROR: " + str(e))
+            try:
+                exception_string = str(e)
+            except:
+                exception_string = "Unprintable exception."
+            finally:
+                error_message = "ERROR: " + exception_string
+                await self._send_reply(message,
+                                       self._format_as_html(error_message))
 
     async def on_inline_query(self, message):
         query_id, from_id, query_string = telepot.glance(message,
