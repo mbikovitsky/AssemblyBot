@@ -20,7 +20,7 @@ class AssemblyBot(telepot.async.Bot):
     UNRECOGNIZED_CONTENT_TYPES = ("voice", "sticker", "photo", "audio",
                                   "document", "video", "contact", "location")
 
-    COMMAND_REGEX = re.compile(r"^\s*/(?P<command>help).*$",
+    COMMAND_REGEX = re.compile(r"^\s*/(?P<command>help|about).*$",
                                re.DOTALL | re.IGNORECASE)
 
     MESSAGE_REGEX = re.compile(r"^(?:\s*\(\s*(?P<arch>x86|x64)\s*\)\s*)?"
@@ -55,6 +55,11 @@ Currently, the supported architectures are:
 
 If the architecture is omitted, x86 is assumed.
 """
+
+    ABOUT_TEXT = "I'm AssemblyBot. My code is available on " +\
+                 "<a href=\"https://github.com/mbikovitsky/AssemblyBot\">" +\
+                 "GitHub" +\
+                 "</a>."
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -130,6 +135,8 @@ If the architecture is omitted, x86 is assumed.
         command = match.group("command").lower()
         if command == "help":
             return self.USAGE_TEXT
+        elif command == "about":
+            return self.ABOUT_TEXT
         else:
             raise BotException("Unrecognized command.")
 
