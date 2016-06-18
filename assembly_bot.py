@@ -5,7 +5,13 @@ import telepot
 import telepot.async
 import re
 import binascii
+import random
 from capstone import *
+
+
+class BotException(Exception):
+    """Base class for exceptions raised by the bot"""
+    pass
 
 
 class AssemblyBot(telepot.async.Bot):
@@ -16,52 +22,84 @@ class AssemblyBot(telepot.async.Bot):
                                r"(?P<assembly>\S.*))$",
                                re.DOTALL | re.IGNORECASE)
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._answerer = telepot.async.helper.Answerer(self)
+
     async def on_chat_message(self, message):
         try:
-            await self._process_message(message)
+            content_type, chat_type, chat_id = telepot.glance(message)
+
+            if content_type in self.UNRECOGNIZED_CONTENT_TYPES:
+                raise BotException("Message content not understood.")
+
+            result = self._process_message_text(message["text"])
+            await self._send_reply(message, result)
+        except BotException as e:
+            await self._send_reply(message, "ERROR: " + str(e))
         except:
             await self._send_reply(message, "ERROR: Exception occurred "
                                             "while processing request.")
 
-    async def _send_reply(self, message, text):
+    async def on_inline_query(self, message):
+        query_id, from_id, query_string = telepot.glance(message,
+                                                         flavor="inline_query")
+
+        def _compute_answer():
+            result = self._process_message_text(query_string)
+
+            return [
+                {
+                    "type": "article",
+                    "id": self._generate_random_id(),
+                    "title": "0xDEADBEEF",
+                    "input_message_content": {
+                        "message_text": self._format_as_html(result),
+                        "parse_mode": "HTML"
+                    }
+                }
+            ]
+
+        self._answerer.answer(message, _compute_answer)
+
+    async def _send_reply(self, message, reply):
         await self.sendMessage(message["chat"]["id"],
-                               "<pre>{}</pre>".format(text),
+                               self._format_as_html(reply),
                                parse_mode="HTML",
                                reply_to_message_id=message["message_id"])
 
-    async def _process_message(self, message):
-        content_type, chat_type, chat_id = telepot.glance(message)
+    @staticmethod
+    def _format_as_html(text):
+        return "<pre>{}</pre>".format(text)
 
-        if content_type in self.UNRECOGNIZED_CONTENT_TYPES:
-            await self._send_reply(message, "ERROR: Message content "
-                                            "not understood.")
-            return
+    @staticmethod
+    def _generate_random_id():
+        # Return a random ID of at most 64 chars in length
+        return hex(random.randint(0, 2 ** (32 * 8) - 1))[2:]
 
-        match = self.MESSAGE_REGEX.fullmatch(message["text"])
+    def _process_message_text(self, text):
+        match = self.MESSAGE_REGEX.fullmatch(text)
         if not match:
-            await self._send_reply(message, "ERROR: Syntax error.")
-            return
+            raise BotException("Syntax error.")
 
         if match.group("bytes"):
-            result = await self._process_bytes(match.group("arch"),
-                                               match.group("bytes"))
+            result = self._process_bytes(match.group("arch"),
+                                         match.group("bytes"))
         elif match.group("assembly"):
-            await self._send_reply(message, "ERROR: Not implemented.")
-            return
+            raise BotException("Not implemented.")
         else:
-            await self._send_reply(message, "ERROR: Not supported.")
-            return
+            raise BotException("Not supported.")
 
-        await self._send_reply(message, result)
+        return result
 
-    async def _process_bytes(self, architecture, raw_bytes):
+    def _process_bytes(self, architecture, raw_bytes):
         architecture = architecture.lower() if architecture else "x86"
         if architecture == "x86":
             disassembler = Cs(CS_ARCH_X86, CS_MODE_32)
         elif architecture == "x64":
             disassembler = Cs(CS_ARCH_X86, CS_MODE_64)
         else:
-            return None
+            raise BotException("Unsupported architecture.")
 
         binary = binascii.unhexlify(raw_bytes)
 
