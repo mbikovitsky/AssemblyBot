@@ -17,4 +17,7 @@ loop = asyncio.get_event_loop()
 loop.create_task(bot.message_loop())
 
 # Run forever
-loop.run_forever()
+try:
+    loop.run_forever()
+finally:
+    loop.close()
