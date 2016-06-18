@@ -97,7 +97,7 @@ If the architecture is omitted, x86 is assumed.
                     "id": self._generate_random_id(),
                     "title": "0xDEADBEEF",
                     "input_message_content": {
-                        "message_text": self._format_as_html(result),
+                        "message_text": result,
                         "parse_mode": "HTML"
                     }
                 }
