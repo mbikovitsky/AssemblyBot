@@ -2,7 +2,7 @@
 
 
 import telepot
-import telepot.async
+import telepot.aio
 import re
 import binascii
 import random
@@ -16,7 +16,7 @@ class BotException(Exception):
     pass
 
 
-class AssemblyBot(telepot.async.Bot):
+class AssemblyBot(telepot.aio.Bot):
     UNRECOGNIZED_CONTENT_TYPES = ("voice", "sticker", "photo", "audio",
                                   "document", "video", "contact", "location")
 
@@ -63,7 +63,7 @@ If the architecture is omitted, x86 is assumed.
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._answerer = telepot.async.helper.Answerer(self)
+        self._answerer = telepot.aio.helper.Answerer(self)
 
     async def on_chat_message(self, message):
         try:
