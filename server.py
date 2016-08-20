@@ -43,9 +43,10 @@ def main():
             app.router.add_route("POST", webhook_path, webhook)
 
             # Register the server with the event loop
+            port = int(os.environ["PORT"]) if "PORT" in os.environ else 80
             loop.run_until_complete(loop.create_server(app.make_handler(),
                                                        "0.0.0.0",
-                                                       80))
+                                                       port))
 
             # Set the webhook URL with Telegram
             loop.run_until_complete(bot.setWebhook(base_url + webhook_path))
