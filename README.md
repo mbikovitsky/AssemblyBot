@@ -9,6 +9,7 @@ Telegram bot for assembling and disassembling on-the-go.
 - [telepot][2] v8.3
 - [Capstone][3] v3.0.4
 - [Keystone][4] v0.9.1
+- [aiohttp][5] v0.22.5
 
 
 ## Screenshots
@@ -22,3 +23,4 @@ Telegram bot for assembling and disassembling on-the-go.
 [2]: https://github.com/nickoala/telepot
 [3]: http://www.capstone-engine.org
 [4]: http://www.keystone-engine.org
+[5]: https://aiohttp.readthedocs.io
