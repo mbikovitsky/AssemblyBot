@@ -4,20 +4,20 @@
 import os
 import asyncio
 from assembly_bot import AssemblyBot
+from contextlib import closing
 
 
-TELEGRAM_TOKEN = os.environ["TELEGRAM_TOKEN"]
+def main():
+    with closing(asyncio.get_event_loop()) as loop:
+        # Initialize the bot
+        bot = AssemblyBot(os.environ["TELEGRAM_TOKEN"])
+
+        # Set up the event loop
+        loop.create_task(bot.message_loop())
+
+        # Run forever
+        loop.run_forever()
 
 
-# Initialize the bot
-bot = AssemblyBot(TELEGRAM_TOKEN)
-
-# Set up the event loop
-loop = asyncio.get_event_loop()
-loop.create_task(bot.message_loop())
-
-# Run forever
-try:
-    loop.run_forever()
-finally:
-    loop.close()
+if __name__ == "__main__":
+    main()
