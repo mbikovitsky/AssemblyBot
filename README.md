@@ -6,10 +6,10 @@ Telegram bot for assembling and disassembling on-the-go.
 ## Requirements
 
 - [Python][1] v3.5+
-- [telepot][2] v8.3
+- [telepot][2] v12.7
 - [Capstone][3] v3.0.4
 - [Keystone][4] v0.9.1
-- [aiohttp][5] v0.22.5
+- [aiohttp][5] v3.7.4
 
 
 ## Screenshots
