@@ -1,4 +1,4 @@
 telepot==12.7
 capstone==3.0.4
 keystone-engine==0.9.1-3
-aiohttp==3.5.4
+aiohttp==3.7.4
