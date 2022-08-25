@@ -1,0 +1,17 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+telepot = "*"
+capstone = "*"
+keystone-engine = "*"
+aiohttp = "*"
+
+[dev-packages]
+pylint = "*"
+pycodestyle = "*"
+
+[requires]
+python_version = "3.7"
