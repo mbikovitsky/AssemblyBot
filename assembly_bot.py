@@ -4,11 +4,9 @@
 
 import binascii
 import html
-import random
 import re
 
-import telepot
-import telepot.aio
+from aiogram.types import Message
 from capstone import CS_ARCH_X86, CS_MODE_32, CS_MODE_64, Cs
 from keystone import KS_ARCH_X86, KS_MODE_32, KS_MODE_64, Ks
 
@@ -17,18 +15,7 @@ class BotException(Exception):
     """Base class for exceptions raised by the bot"""
 
 
-class AssemblyBot(telepot.aio.Bot):
-    _UNRECOGNIZED_CONTENT_TYPES = (
-        "voice",
-        "sticker",
-        "photo",
-        "audio",
-        "document",
-        "video",
-        "contact",
-        "location",
-    )
-
+class AssemblyBot:
     _COMMAND_REGEX = re.compile(
         r"^\s*/(?P<command>help|about).*$", re.DOTALL | re.IGNORECASE
     )
@@ -73,58 +60,24 @@ If the architecture is omitted, x86 is assumed.
         '<a href="https://github.com/mbikovitsky/AssemblyBot">GitHub</a>.'
     )
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._answerer = telepot.aio.helper.Answerer(self)
-
-    async def on_chat_message(self, message):
+    async def on_chat_message(self, message: Message):
         try:
-            content_type = telepot.glance(message)[0]
-
-            if content_type in self._UNRECOGNIZED_CONTENT_TYPES:
+            if not message.text:
                 raise BotException("Message content not understood.")
 
-            message_text = message["text"]
-
-            if self._is_command(message_text):
-                result = self._process_command_text(message["text"])
+            if self._is_command(message.text):
+                result = self._process_command_text(message.text)
             else:
-                result = self._process_query_text(message["text"])
-            await self._send_reply(message, result)
+                result = self._process_query_text(message.text)
+            await message.answer(result, parse_mode="HTML")
         except Exception as exception:  # pylint: disable=broad-except
-            await self._send_reply(message, self._format_as_html(f"ERROR: {exception}"))
-
-    async def on_inline_query(self, message):
-        query_string = telepot.glance(message, flavor="inline_query")[2]
-
-        def _compute_answer():
-            result = self._process_query_text(query_string)
-
-            return [
-                {
-                    "type": "article",
-                    "id": self._generate_random_id(),
-                    "title": "0xDEADBEEF",
-                    "input_message_content": {
-                        "message_text": result,
-                        "parse_mode": "HTML",
-                    },
-                }
-            ]
-
-        self._answerer.answer(message, _compute_answer)
-
-    async def _send_reply(self, message, reply):
-        await self.sendMessage(message["chat"]["id"], reply, parse_mode="HTML")
+            await message.answer(
+                self._format_as_html(f"ERROR: {exception}"), parse_mode="HTML"
+            )
 
     @staticmethod
     def _format_as_html(text):
         return f"<pre>{html.escape(text)}</pre>"
-
-    @staticmethod
-    def _generate_random_id():
-        # Return a random ID of at most 64 chars in length
-        return hex(random.randint(0, 2 ** (32 * 8) - 1))[2:]
 
     @classmethod
     def _is_command(cls, text):
